@@ -12,19 +12,22 @@ const unsigned int SCR_HEIGHT = 600;
 const char* vertexShaderSource = R"STRING(
 #version 330 core
 layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
+out vec3 ourColor;
 void main() 
 {
 	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1);
+	ourColor = aColor;
 }	
 )STRING";
 
 const char* fragmentShaderSource = R"STRING(
 #version 330 core
 out vec4 FragColor;
-uniform vec4 ourColor;
+in vec3 ourColor;
 void main()
 {
-	FragColor = ourColor;
+	FragColor = vec4(ourColor, 1);
 }
 )STRING";
 
@@ -118,10 +121,10 @@ int main()
 		return -1;
 	int shaderProgram = loadShaders();
 
-	float vertices[] = {
-		-0.5f, -0.5f, 0,
-		0, 0.5f, 0,
-		0.5f, -0.5f, 0
+	float vertices[] = {	//colors
+		-0.5f, -0.5f, 0,	1,0,0,
+		0, 0.5f, 0,			0,1,0,
+		0.5f, -0.5f, 0,		0,0,1
 	};
 
 	unsigned int VBO, VAO;
@@ -131,8 +134,13 @@ int main()
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+	// Vertex attributes (location = 0) stuff
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	// (location = 1)
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
