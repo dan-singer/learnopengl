@@ -2,34 +2,11 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
-
+#include "Shader.h"
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-//Shaders
-const char* vertexShaderSource = R"STRING(
-#version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
-out vec3 ourColor;
-void main() 
-{
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1);
-	ourColor = aColor;
-}	
-)STRING";
-
-const char* fragmentShaderSource = R"STRING(
-#version 330 core
-out vec4 FragColor;
-in vec3 ourColor;
-void main()
-{
-	FragColor = vec4(ourColor, 1);
-}
-)STRING";
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -69,48 +46,6 @@ GLFWwindow* initWindow()
 	return window;
 }
 
-int loadShader(const char* src, GLenum type, const char* errorHeading)
-{
-	int shader = glCreateShader(type);
-	glShaderSource(shader, 1, &src, NULL);
-	glCompileShader(shader);
-	int success;
-	char infoLog[512];
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::" << errorHeading << "::COMPILATION_FAILED\n" << infoLog << std::endl;
-		return -1;
-	}
-	return shader;
-}
-
-int loadShaders()
-{
-	// build and compile our shader program
-	int vertexShader = loadShader(vertexShaderSource, GL_VERTEX_SHADER, "VERTEX");
-	int fragmentShader = loadShader(fragmentShaderSource, GL_FRAGMENT_SHADER, "FRAGMENT");
-
-	//link shaders
-	int shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	// Check for linker errors
-	int success;
-	char infoLog[255];
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-		return shaderProgram;
-	}
-	// cleanup
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-	return shaderProgram;
-}
-
 
 
 int main()
@@ -119,7 +54,8 @@ int main()
 	GLFWwindow* window = initWindow();
 	if (!window)
 		return -1;
-	int shaderProgram = loadShaders();
+
+	Shader shader("ShaderPrograms/vertex.vs", "ShaderPrograms/fragment.fs");
 
 	float vertices[] = {	//colors
 		-0.5f, -0.5f, 0,	1,0,0,
@@ -155,12 +91,10 @@ int main()
 		glClearColor(0.1f, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
+		shader.use();
 
-		float time = glfwGetTime();
-		float greenValue = sin(time) / 2.0f + 0.5f;
-		int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-		glUniform4f(vertexColorLocation, 0, greenValue, 0, 1);
+		//float horzOffset = sin(glfwGetTime());
+		//shader.setFloat("horzOffset", horzOffset);
 
 		// Render the triangle
 		glBindVertexArray(VAO);
