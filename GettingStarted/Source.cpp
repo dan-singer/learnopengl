@@ -4,6 +4,9 @@
 #include <vector>
 #include "Shader.h"
 #include "stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -152,6 +155,7 @@ int main()
 	glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0);
 	glUniform1i(glGetUniformLocation(shader.ID, "texture2"), 1);
 
+
 	// The render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -168,11 +172,29 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
-
 		shader.use();
 		shader.setFloat("t", textureT);
 		glBindVertexArray(VAO);
+
+
+		//Rectangle Transformations
+		float time = (float)glfwGetTime();
+		glm::mat4 trans = glm::mat4(1.0f);
+		trans = glm::translate(trans, glm::vec3(0.5, -0.5, 0.0));
+		trans = glm::rotate(trans, time, glm::vec3(0, 0, 1));
+		unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+		trans = glm::mat4(1.0f);
+		trans = glm::translate(trans, glm::vec3(-.5f, .5f, 0));
+		trans = glm::scale(trans, glm::vec3(glm::sin(time), 1, 1));
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
 		// Check and call events and swap the buffers
 		glfwSwapBuffers(window);
